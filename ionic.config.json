@@ -1,0 +1,7 @@
+{
+  "name": "covid19-checker",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

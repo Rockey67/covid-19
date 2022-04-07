@@ -1,0 +1,46 @@
+# Node Image for docker on which code will execute
+image: node:latest
+
+# This is the stages / task to perfom in jobs
+stages:
+  - build
+  - deploy
+
+variables:
+  # Common
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  AWS_REGION: "us-east-2"  
+
+# caching for reuse
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+  - node_modules/
+  - dist/  
+    
+# This command is run before the execution of stages    
+before_script:
+  - npm install
+
+# Job One for making build
+build_master: 
+  stage: build
+  script:
+  - /bin/sh ./deploymentcheck.sh 
+  - npm run build --prod
+  - printenv
+  only: ['colombia-production-release','colombia-test-release']
+
+# Job Two for deploy build to S3
+deploy_master:
+  image: python:latest  
+  stage: deploy
+  before_script:
+    - pip install awscli 
+  script:
+    - ls
+    - /bin/sh ./gitdeployment.sh
+   # - aws s3 sync ./dist s3://$BUCKETNAME/ --acl=public-read --delete
+   # - aws cloudfront create-invalidation --distribution-id $DISTRIBUTIONID --paths *
+  only: ['colombia-production-release','colombia-test-release']
